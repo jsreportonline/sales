@@ -29,7 +29,7 @@ mongo().then(() => {
       }
 
       if (req.url === '/verification') {
-        m.ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        m.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0]
         console.log('verifying ' + JSON.stringify(m))
         return verify(m).then((v) => {
           res.statusCode = 200
