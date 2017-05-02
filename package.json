@@ -24,9 +24,8 @@
     }
   },
   "dependencies": {
-    "bluebird": "3.4.6",
-    "mongodb": "2.2.10",
-    "semver-compare": "1.0.0"
+    "bluebird": "3.5.0",
+    "mongodb": "2.2.26"
   },
   "devDependencies": {
     "eslint": "3.19.0",
