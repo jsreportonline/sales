@@ -1,4 +1,4 @@
-process.env['connectionString:uri'] = 'mongodb://localhost:27017/sales-test'
+process.env['connectionString:uri'] = 'mongodb://localhost:27018/sales-test'
 process.env['connectionString:database'] = 'sales-test'
 
 require('should')
@@ -109,6 +109,38 @@ describe('verify', () => {
       }).then((res) => {
         res.status.should.be.eql(0)
         res.message.should.be.containEql('The subscription is no longer active probably due to failed payment or deactivation. The subscription can be used maximum one month in inactive state.')
+      })
+    }))
+  })
+
+  it.only('should verify existing subscription with existing reoccuring payment', () => {
+    const originalPurchase = new Date()
+    originalPurchase.setFullYear(originalPurchase.getFullYear() - 1)
+
+    const reoccuringPurchase = new Date()
+    reoccuringPurchase.setDate(reoccuringPurchase.getDate() - 2)
+
+    return mongo.db().collection('sales').insertOneAsync({
+      purchaseDate: originalPurchase,
+      email: 'a@a.com',
+      license_key: 'foo',
+      permalink: '1'
+    }).then(() => mongo.db().collection('sales').insertOneAsync({
+      purchaseDate: reoccuringPurchase,
+      license_key: 'different',
+      email: 'a@a.com',
+      permalink: '1'
+    })).then(() => mongo.db().collection('products').insertOneAsync({
+      isYearly: true,
+      product_id: 1,
+      permalink: '1'
+    }).then(() => {
+      return verify({
+        licenseKey: 'foo',
+        version: '1.1.1'
+      }).then((res) => {
+        res.status.should.be.eql(0)
+        res.message.should.be.eql('License key verified as yearly subscription')
       })
     }))
   })
