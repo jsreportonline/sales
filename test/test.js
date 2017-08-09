@@ -1,4 +1,4 @@
-process.env['connectionString:uri'] = 'mongodb://localhost:27018/sales-test'
+process.env['connectionString:uri'] = 'mongodb://localhost:27017/sales-test'
 process.env['connectionString:database'] = 'sales-test'
 
 require('should')
@@ -113,7 +113,7 @@ describe('verify', () => {
     }))
   })
 
-  it.only('should verify existing subscription with existing reoccuring payment', () => {
+  it('should verify existing subscription with existing reoccuring payment', () => {
     const originalPurchase = new Date()
     originalPurchase.setFullYear(originalPurchase.getFullYear() - 1)
 
