@@ -12,14 +12,15 @@ mongo().then(() => {
       return res.end('ok')
     }
 
-    var data = ''
+    var data = []
     req.on('data', function (chunk) {
-      data += chunk.toString()
+      data.push(chunk)
     })
 
     req.on('end', function () {
       let m
       try {
+        data = Buffer.concat(data).toString()
         m = JSON.parse(data)
       } catch (e) {
         console.error(e)
