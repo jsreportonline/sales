@@ -1,5 +1,5 @@
-process.env['connectionString:uri'] = 'mongodb://localhost:27017/sales-test'
-process.env['connectionString:database'] = 'sales-test'
+process.env['extensions:mongodbStore:uri'] = 'mongodb://localhost:27017/sales-test'
+process.env['db:salesDatabaseName'] = 'sales-test'
 
 require('should')
 const mongo = require('../lib/mongo')
