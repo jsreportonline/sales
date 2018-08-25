@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "standard",
-    "test": "mocha test"
+    "test": "mocha test --exit"
   },
   "repository": {
     "type": "git",
@@ -24,13 +24,13 @@
     }
   },
   "dependencies": {
-    "bluebird": "3.5.0",
-    "mongodb": "2.2.26"
+    "bluebird": "3.5.1",
+    "mongodb": "3.0.6"
   },
   "devDependencies": {
-    "eslint": "3.19.0",
-    "mocha": "3.3.0",
-    "should": "11.2.1",
-    "standard": "9.0.2"
+    "eslint": "4.19.1",
+    "mocha": "5.2.0",
+    "should": "13.2.1",
+    "standard": "11.0.1"
   }
 }
