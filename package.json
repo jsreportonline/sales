@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "standard",
-    "test": "mocha test --exit"
+    "test": "mocha test --exit --timeout=5000"
   },
   "repository": {
     "type": "git",

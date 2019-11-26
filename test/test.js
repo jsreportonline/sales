@@ -31,7 +31,8 @@ describe('verify', () => {
     return mongo.db().collection('sales').insertOneAsync({
       purchaseDate: lastMonth,
       license_key: 'foo',
-      product_id: 1
+      product_id: 1,
+      paymentType: 'manual'
     }).then(() => mongo.db().collection('products').insertOneAsync({
       isYearly: true,
       product_id: 1
@@ -41,6 +42,7 @@ describe('verify', () => {
         version: '1.1.1'
       }).then((res) => {
         res.status.should.be.eql(0)
+        res.paymentType.should.be.eql('manual')
         res.message.should.be.eql('License key verified as yearly subscription')
       })
     }))
