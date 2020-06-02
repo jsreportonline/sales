@@ -1,8 +1,9 @@
 {
   "name": "sales",
-  "version": "1.0.0",
+  "version": "2.3.0",
   "description": "",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "lint": "standard",
     "test": "mocha test --exit --timeout=5000"
