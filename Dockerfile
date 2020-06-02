@@ -1,4 +1,4 @@
-FROM mhart/alpine-node
+FROM node:12.17.0-alpine3.11
 MAINTAINER Jan Blaha
 EXPOSE 1500
 
