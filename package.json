@@ -24,13 +24,13 @@
     }
   },
   "dependencies": {
-    "bluebird": "3.5.1",
+    "bluebird": "3.7.2",
     "mongodb": "3.0.6"
   },
   "devDependencies": {
     "eslint": "4.19.1",
     "mocha": "5.2.0",
-    "should": "13.2.1",
+    "should": "13.2.3",
     "standard": "11.0.1"
   }
 }
