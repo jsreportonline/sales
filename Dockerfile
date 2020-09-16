@@ -1,5 +1,4 @@
 FROM node:12.17.0-alpine3.11
-MAINTAINER Jan Blaha
 EXPOSE 1500
 
 RUN apk add --update curl
@@ -14,6 +13,6 @@ COPY . /usr/src/app
 
 EXPOSE 1500
 
-HEALTHCHECK CMD curl --fail http://localhost:1500 || exit 1
+HEALTHCHECK --interval=5s --timeout=2s CMD curl --fail http://localhost:1500 || kill 1
 
 CMD [ "node", "index.js" ]
