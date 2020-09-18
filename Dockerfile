@@ -13,6 +13,6 @@ COPY . /usr/src/app
 
 EXPOSE 1500
 
-HEALTHCHECK --interval=5s --timeout=2s CMD curl --fail http://localhost:1500 || kill 1
+HEALTHCHECK --interval=20s --timeout=10s CMD curl --max-time 5 --fail http://localhost:1500 || killall -9 node
 
 CMD [ "node", "index.js" ]
