@@ -4,14 +4,16 @@ process.env['db:salesDatabaseName'] = 'sales-test'
 require('should')
 const mongo = require('../lib/mongo')
 const verify = require('../lib/verify')
+const usageCheck = require('../lib/usageCheck')
 
-describe('verify', () => {
+describe('sales', () => {
   beforeEach(() => {
     return mongo()
       .then(() => mongo.db().collection('sales').removeManyAsync({}))
       .then(() => mongo.db().collection('products').removeManyAsync({}))
       .then(() => mongo.db().collection('versions').removeManyAsync({}))
       .then(() => mongo.db().collection('instances').removeManyAsync({}))
+      .then(() => mongo.db().collection('usages').removeManyAsync({}))
   })
 
   it('should return license key is not valid if not found in sales', () => {
@@ -368,5 +370,102 @@ describe('verify', () => {
       res.status.should.be.eql(0)
       res.message.should.be.eql('Starting one month enterprise trial')
     }))
+  })
+
+  it('usageCheck should insert new doc to the usages and return ok when db empty', async () => {
+    const res = await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      interval: 60000
+    })
+
+    res.status.should.be.eql(0)
+
+    const usages = await mongo.db().collection('usages').find({}).toArrayAsync()
+    usages.should.have.length(1)
+    usages[0].licenseKey.should.be.eql('foo')
+    usages[0].ip.should.be.eql('1.2.3.4')
+    usages[0].hostId.should.be.eql('a')
+  })
+
+  it('usageCheck should return status 1 when parallel usage detected', async () => {
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: 'x.x.x.x',
+      hostId: 'b',
+      createdAt: new Date()
+    })
+
+    const res = await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      checkInterval: 60000
+    })
+
+    res.status.should.be.eql(1)
+  })
+
+  it('usageCheck should return status 0 when parallel usage is older', async () => {
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: 'x.x.x.x',
+      hostId: 'b',
+      createdAt: new Date((new Date().getTime() - 10000))
+    })
+
+    const res = await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      checkInterval: 1000
+    })
+
+    res.status.should.be.eql(0)
+  })
+
+  it('usageCheck should return status 0 for same instance or different keys', async () => {
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      createdAt: new Date((new Date().getTime() - 1000))
+    })
+
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'different',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      createdAt: new Date((new Date().getTime() - 1000))
+    })
+
+    const res = await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      checkInterval: 10000
+    })
+
+    res.status.should.be.eql(0)
+  })
+
+  it('usageCheck should remove an hour old entries', async () => {
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      createdAt: new Date((new Date().getTime() - 60 * 60 * 1000))
+    })
+
+    await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      checkInterval: 10000
+    })
+
+    const usages = await mongo.db().collection('usages').find({}).toArrayAsync()
+    usages.should.have.length(1)
   })
 })

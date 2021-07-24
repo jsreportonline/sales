@@ -1,6 +1,7 @@
 const http = require('http')
 const mongo = require('./lib/mongo')
 const verify = require('./lib/verify')
+const usageCheck = require('./lib/usageCheck')
 const gumroad = require('./lib/gumroad')
 
 console.log('starting')
@@ -12,7 +13,7 @@ mongo().then(() => {
       return res.end('ok')
     }
 
-    var data = []
+    let data = []
     req.on('data', function (chunk) {
       data.push(chunk)
     })
@@ -33,6 +34,23 @@ mongo().then(() => {
         m.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0]
         console.log('verifying ' + JSON.stringify(m))
         return verify(m).then((v) => {
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          const out = JSON.stringify(v)
+          console.log(out)
+          res.end(out)
+        }).catch((e) => {
+          console.error(e)
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'text/plain')
+          return res.end(e.stack)
+        })
+      }
+
+      if (req.url === '/usage-check') {
+        m.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0]
+        console.log('usage check ' + JSON.stringify(m))
+        return usageCheck(m).then((v) => {
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json')
           const out = JSON.stringify(v)
