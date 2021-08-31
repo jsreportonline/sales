@@ -149,6 +149,38 @@ describe('sales', () => {
     }))
   })
 
+  it('should verify existing subscription with existing reoccuring payment and use case insensitive pairing by email', () => {
+    const originalPurchase = new Date()
+    originalPurchase.setFullYear(originalPurchase.getFullYear() - 1)
+
+    const reoccuringPurchase = new Date()
+    reoccuringPurchase.setDate(reoccuringPurchase.getDate() - 2)
+
+    return mongo.db().collection('sales').insertOneAsync({
+      purchaseDate: originalPurchase,
+      email: 'a@a.com',
+      license_key: 'foo',
+      permalink: '1'
+    }).then(() => mongo.db().collection('sales').insertOneAsync({
+      purchaseDate: reoccuringPurchase,
+      license_key: 'different',
+      email: 'A@a.com',
+      permalink: '1'
+    })).then(() => mongo.db().collection('products').insertOneAsync({
+      isYearly: true,
+      product_id: 1,
+      permalink: '1'
+    }).then(() => {
+      return verify({
+        licenseKey: 'foo',
+        version: '1.1.1'
+      }).then((res) => {
+        res.status.should.be.eql(0)
+        res.message.should.be.eql('License key verified as yearly subscription')
+      })
+    }))
+  })
+
   it('should verify existing subscription using purchaser_id is exists in the original sale', () => {
     const originalPurchase = new Date()
     originalPurchase.setFullYear(originalPurchase.getFullYear() - 1)
