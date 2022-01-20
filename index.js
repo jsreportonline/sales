@@ -6,6 +6,13 @@ const gumroad = require('./lib/gumroad')
 
 console.log('starting')
 mongo().then(() => {
+  setInterval(() => {
+    console.log('deleting usages')
+    mongo.db().collection('usages')
+      .deleteMany({ createdAt: { $lt: new Date(new Date().getTime() - (60 * 60 * 1000)) } })
+      .catch((e) => console.log('error deleting usages', e))
+  }, 5 * 60 * 1000)
+
   const server = http.createServer((req, res) => {
     if (req.method === 'GET') {
       res.statusCode = 200

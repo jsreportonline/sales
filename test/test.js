@@ -424,16 +424,23 @@ describe('sales', () => {
   it('usageCheck should return status 1 when parallel usage detected', async () => {
     await mongo.db().collection('usages').insertAsync({
       licenseKey: 'foo',
-      ip: 'x.x.x.x',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      createdAt: new Date(new Date().getTime() - 5005)
+    })
+
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
       hostId: 'b',
-      createdAt: new Date()
+      createdAt: new Date(new Date().getTime() - 3000)
     })
 
     const res = await usageCheck({
       licenseKey: 'foo',
       ip: '1.2.3.4',
       hostId: 'a',
-      checkInterval: 60000
+      checkInterval: 5000
     })
 
     res.status.should.be.eql(1)
@@ -482,22 +489,21 @@ describe('sales', () => {
     res.status.should.be.eql(0)
   })
 
-  it('usageCheck should remove an hour old entries', async () => {
+  it('usageCheck should return status 0 when one instance shuts down and second starts immediately', async () => {
     await mongo.db().collection('usages').insertAsync({
       licenseKey: 'foo',
-      ip: '1.2.3.4',
-      hostId: 'a',
-      createdAt: new Date((new Date().getTime() - 60 * 60 * 1000))
+      ip: 'x.x.x.x',
+      hostId: 'b',
+      createdAt: new Date(new Date().getTime() - 1000)
     })
 
-    await usageCheck({
+    const res = await usageCheck({
       licenseKey: 'foo',
       ip: '1.2.3.4',
       hostId: 'a',
-      checkInterval: 10000
+      checkInterval: 60000
     })
 
-    const usages = await mongo.db().collection('usages').find({}).toArrayAsync()
-    usages.should.have.length(1)
+    res.status.should.be.eql(0)
   })
 })
