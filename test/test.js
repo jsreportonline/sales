@@ -215,6 +215,39 @@ describe('sales', () => {
     }))
   })
 
+  it('should verify existing subscription matching license_key if the email is changed', async () => {
+    await mongo.db().collection('products').insertOneAsync({
+      isYearly: true,
+      product_id: 1,
+      permalink: '1'
+    })
+
+    const originalPurchase = new Date()
+    originalPurchase.setFullYear(originalPurchase.getFullYear() - 2)
+
+    await mongo.db().collection('sales').insertOneAsync({
+      purchaseDate: originalPurchase,
+      email: 'a@a.com',
+      license_key: 'foo',
+      permalink: '1'
+    })
+
+    await mongo.db().collection('sales').insertOneAsync({
+      purchaseDate: new Date(),
+      email: 'b@b.com',
+      license_key: 'foo',
+      permalink: '1'
+    })
+
+    const res = await verify({
+      licenseKey: 'foo',
+      version: '1.1.1'
+    })
+
+    res.status.should.be.eql(0)
+    res.message.should.be.eql('License key verified as yearly subscription')
+  })
+
   it('should verify valid perpetual license', () => {
     const lastMonth = new Date()
     lastMonth.setMonth(lastMonth.getMonth() - 1)
