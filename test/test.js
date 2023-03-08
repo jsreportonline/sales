@@ -287,13 +287,16 @@ describe('sales', () => {
     })).then(() => mongo.db().collection('versions').insertOneAsync({
       version: '1.1.1',
       releaseDate: new Date()
-    }).then(() => {
+    }).then(() => mongo.db().collection('versions').insertOneAsync({
+      version: '0.0.0',
+      releaseDate: new Date(1990, 0, 1)
+    })).then(() => {
       return verify({
         licenseKey: 'foo',
         version: '1.1.1'
       }).then((res) => {
         res.status.should.be.eql(1)
-        res.message.should.be.eql('The license key is not valid for this version')
+        res.message.should.containEql('The latest eligible version for this license key is 0.0.0')
       })
     }))
   })
@@ -312,13 +315,16 @@ describe('sales', () => {
     })).then(() => mongo.db().collection('versions').insertAsync({
       version: '1.1.1',
       releaseDate: new Date()
-    }).then(() => {
+    }).then(() => mongo.db().collection('versions').insertOneAsync({
+      version: '0.0.0',
+      releaseDate: new Date(1990, 0, 1)
+    })).then(() => {
       return verify({
         licenseKey: 'foo',
         version: '1.1.2'
       }).then((res) => {
         res.status.should.be.eql(1)
-        res.message.should.be.eql('The license key is not valid for this version')
+        res.message.should.containEql('The license key is not valid for version 1.1.2 because the 6 months')
       })
     }))
   })
@@ -477,6 +483,58 @@ describe('sales', () => {
     })
 
     res.status.should.be.eql(1)
+  })
+
+  it('usageCheck should return status 1 and hostname when parallel usage detected', async () => {
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: `${Buffer.from('ahost').toString('base64')}:'aaa'}`,
+      createdAt: new Date(new Date().getTime() - 5005)
+    })
+
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: `${Buffer.from('bhost').toString('base64')}:'aaa'}`,
+      createdAt: new Date(new Date().getTime() - 3000)
+    })
+
+    const res = await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: `${Buffer.from('ahost').toString('base64')}:'aaa'}`,
+      checkInterval: 5000
+    })
+
+    res.status.should.be.eql(1)
+    res.message.should.containEql('bhost')
+  })
+
+  it('usageCheck should return status 1 and ip when parallel usage detected', async () => {
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      createdAt: new Date(new Date().getTime() - 5005)
+    })
+
+    await mongo.db().collection('usages').insertAsync({
+      licenseKey: 'foo',
+      ip: '1.2.3.5',
+      hostId: 'b',
+      createdAt: new Date(new Date().getTime() - 3000)
+    })
+
+    const res = await usageCheck({
+      licenseKey: 'foo',
+      ip: '1.2.3.4',
+      hostId: 'a',
+      checkInterval: 5000
+    })
+
+    res.status.should.be.eql(1)
+    res.message.should.containEql('1.2.3.5')
   })
 
   it('usageCheck should return status 0 when parallel usage is older', async () => {
