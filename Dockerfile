@@ -1,4 +1,4 @@
-FROM node:12.17.0-alpine3.11
+FROM node:16-alpine3.16
 EXPOSE 1500
 
 RUN apk add --update curl
