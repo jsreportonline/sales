@@ -1,4 +1,4 @@
-process.env['extensions:mongodbStore:uri'] = 'mongodb://localhost:27017/sales-test'
+process.env.extensions_mongodbStore_uri = 'mongodb://127.0.0.1:27017/sales-test'
 process.env['db:salesDatabaseName'] = 'sales-test'
 
 require('should')
